@@ -44,6 +44,14 @@ local function handle_cursor_move()
 	end
 end
 
+local function delay_render()
+	vim.schedule(function()
+		if state.visible then
+			render.render()
+		end
+	end)
+end
+
 ---Show the buffer sticks floating window
 function M.show()
 	if not config.show_indicators and not state.list_mode then
@@ -124,15 +132,15 @@ function M.setup(opts)
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ "BufModifiedSet", "TextChanged", "TextChangedI", "BufWritePost" }, {
+	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
 		group = augroup,
-		callback = function()
-			vim.schedule(function()
-				if state.visible then
-					render.render()
-				end
-			end)
-		end,
+		callback = delay_render
+	})
+
+	vim.api.nvim_create_autocmd("OptionSet", {
+		group = augroup,
+		pattern = "modified",
+		callback = delay_render
 	})
 
 	vim.api.nvim_create_autocmd("ColorScheme", {
